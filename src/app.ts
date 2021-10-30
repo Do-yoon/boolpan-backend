@@ -1,14 +1,16 @@
-const http = require('http');
+import express from "express";
 
-const hostname = '127.0.0.1';
-const port = 3000;
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const app = express();
 
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello World');
+//포트번호 3000
+app.set("port", 3000);
+
+//bundle된 index.html '/' 주소로 요청
+app.get('/', (req: any, res: any) => {
+    res.send("Hello world");
 });
 
-server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(app.get("port"), () => {
+    console.log("http://localhost:" + app.get("port"));
 });
