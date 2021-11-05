@@ -1,16 +1,30 @@
 import express from "express";
+import winston from "winston";
+import bodyParser from "body-parser";
+import controller from "api";
 
-const webpackDevMiddleware = require('webpack-dev-middleware');
 const app = express();
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' })
+    ]
+});
+//app.use(logger);
 
-//포트번호 3000
 app.set("port", 3000);
 
-//bundle된 index.html '/' 주소로 요청
 app.get('/', (req: any, res: any) => {
     res.send("Hello world");
 });
 
+
+
 app.listen(app.get("port"), () => {
     console.log("http://localhost:" + app.get("port"));
 });
+
+export default app;

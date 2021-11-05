@@ -76,7 +76,7 @@ const config: Configuration = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './public/index.html'
+            template: './src/public/index.html'
         })
     ]
 };
