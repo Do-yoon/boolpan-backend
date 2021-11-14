@@ -1,7 +1,7 @@
 import express from "express";
 import winston from "winston";
 import bodyParser from "body-parser";
-import controller from "api";
+import controller from "./api";
 
 const app = express();
 const logger = winston.createLogger({
@@ -21,7 +21,8 @@ app.get('/', (req: any, res: any) => {
     res.send("Hello world");
 });
 
-
+//const api = require('api');
+app.use('/v0', controller);
 
 app.listen(app.get("port"), () => {
     console.log("http://localhost:" + app.get("port"));
