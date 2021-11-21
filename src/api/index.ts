@@ -1,13 +1,8 @@
-const router = require('express').Router();
-const URI = require('./uri');
-const USER_URI = require('uri').USER_URL;
+import express from "express";
+import chatRoomRouter from "./controller/ChatRoomRouter";
 
-router.get(URI.CHAT_ROOM_LIST, (req: any, res: any) => {
-    res.send([{
-        name: "test",
-        limit: 100,
-        current: 1
-    }]);
-});
+const router = express.Router();
+
+router.use('/chatRoomList', chatRoomRouter);
 
 export default router;
