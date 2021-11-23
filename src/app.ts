@@ -14,6 +14,8 @@ const logger = winston.createLogger({
     ]
 });
 //app.use(logger);
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json());
 
 app.set("port", 3000);
 

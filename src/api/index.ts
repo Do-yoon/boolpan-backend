@@ -1,8 +1,8 @@
 import express from "express";
-import chatRoomRouter from "./controller/ChatRoomRouter";
+import chatRouter from "./controller/ChatRouter";
 
 const router = express.Router();
 
-router.use('/chatRoomList', chatRoomRouter);
+router.use('/chat', chatRouter);
 
 export default router;
