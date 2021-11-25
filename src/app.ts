@@ -17,7 +17,7 @@ const logger = winston.createLogger({
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 
-app.set("port", 3000);
+app.set("port", 8080);
 
 app.get('/', (req: any, res: any) => {
     res.send("Hello world");
