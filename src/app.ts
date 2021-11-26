@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import controller from "./api";
 
 const app = express();
+const cors = require('cors');
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
@@ -16,6 +17,7 @@ const logger = winston.createLogger({
 //app.use(logger);
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
+app.use(cors('localhost:3000'));
 
 app.set("port", 8080);
 
