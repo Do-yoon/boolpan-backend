@@ -17,6 +17,7 @@
     "@types/webpack": "^5.28.0",
     "babel-loader": "^8.2.2",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "html-loader": "^2.1.2",
     "morgan": "^1.10.0",
     "node": "14.17.4",
