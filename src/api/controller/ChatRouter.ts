@@ -8,10 +8,12 @@ chatRouter.get('/', (req: any, res: any) => {
         {
             id: 0,
             name: 'name',
+            title: 'roomTitle',
             limit: 100,
             current: 1
         }
     ]
+    console.log('/v0/chat');
 
     res.send(chat_list);
 });
@@ -20,6 +22,7 @@ chatRouter.get('/:id', (req: any, res: any) => {
     const chat: Chat = {
         id: 0,
         name: 'room_name',
+        title: 'roomTitle',
         limit: 100,
         current: 1
     }
@@ -39,6 +42,7 @@ chatRouter.post('/sendMessage', (req: any, res: any) => {
 interface Chat {
     id: number
     name: string
+    title: string
     limit: number
     current: number
 }
