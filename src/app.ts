@@ -2,6 +2,7 @@ import express from "express";
 import winston from "winston";
 import bodyParser from "body-parser";
 import controller from "./api";
+import mongoose from "mongoose";
 
 const app = express();
 const cors = require('cors');
@@ -15,6 +16,10 @@ const logger = winston.createLogger({
     ]
 });
 //app.use(logger);
+
+const main = async () => mongoose.connect('mongodb://localhost:27017/my_database');
+main().catch(err => console.log(err))
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.use(cors('localhost:3000'));
