@@ -34,25 +34,29 @@ userRouter.post('/login', asyncWrapper(
     })
 )
 
-const signin = async (userinfo: any) => {
-    User.init();
-    const new_user = new User(userinfo)
-    new_user._id = new mongoose.Types.ObjectId();
-    new_user.save((err: any) => console.log(err));
+const signup = async (userinfo: any) => {
+    await User.init();
+    const new_user = await new User(userinfo)
+    if (await User.exists({email: new_user.email})) {
+        console.log(await User.exists({email: new_user.email}));
+        console.log("exists")
+        return false;
+    }
+    await new_user.save((err: any) => console.log(err));
     return true;
 }
 
-userRouter.post('/signin', asyncWrapper(
+userRouter.post('/signup', asyncWrapper(
     async (req: any, res: any) => {
         //TODO: check type of request body
         console.log(req.body);
-        if (!await signin(req.body.userinfo)) {
-            res.send({});
+        if (!await signup(req.body.userinfo)) {
+            res.send(null);
             return;
         }
 
 
-        console.log('/v0/user/login');
+        console.log('/v0/user/signup');
 
         const user_info = {
             name: "test",
