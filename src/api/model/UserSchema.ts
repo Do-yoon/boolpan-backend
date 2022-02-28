@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
-const ObjectId = mongoose.Types.ObjectId
 
 const userSchema = new Schema({
     email: String,
