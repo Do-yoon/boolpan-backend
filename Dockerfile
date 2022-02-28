@@ -6,5 +6,8 @@ RUN npm install
 RUN npm install --save express
 # RUN npm ci --only=production
 COPY . .
-EXPOSE 8080
+EXPOSE 8081
 CMD npm start
+
+FROM nginx
+COPY nginx.conf /etc/nginx/nginx.conf
