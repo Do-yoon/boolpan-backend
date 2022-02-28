@@ -8,6 +8,3 @@ RUN npm install --save express
 COPY . .
 EXPOSE 8081
 CMD npm start
-
-FROM nginx
-COPY nginx.conf /etc/nginx/nginx.conf
