@@ -1,15 +1,15 @@
 version: '3'
 services:
-  app:
-    container_name: node-app
+  server:
+    container_name: app
     restart: always
     build: .
     ports:
-      - '80:8080'
+      - '8080:8080'
     links:
       - mongo
   mongo:
-    container_name: mongo
+    container_name: my_database
     image: mongo
     ports:
       - '27017:27017'
