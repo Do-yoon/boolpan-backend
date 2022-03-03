@@ -27,6 +27,7 @@ const PORT = process.env.PORT || 8081;
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
+app.use(cors('https://boolpan-frontend.s3.ap-northeast-2.amazonaws.com:443'));
 app.use(cors('http://3.37.61.56:3000'));
 app.use(cors('http://3.37.61.56:27017'));
 app.use(cors('http://0.0.0.0:27017'));
