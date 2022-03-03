@@ -45,8 +45,11 @@ app.use(cors('mongodb://mongo:27017'));
 
 const MONGO_URL = process.env.NODE_ENV === 'production'
     ? 'mongodb://mongo:27017'
-    : 'mongodb://localhost:27017'
+    : 'http://localhost:27017'
 
+mongoose.connect("mongodb://mongo:27017/my_database")
+    .then(() => console.log("database link success"))
+    .catch((err) => console.log(err));
 mongoose.connect(MONGO_URL + "/my_database")
     .then(() => console.log("database link success"))
     .catch((err) => console.log(err));
