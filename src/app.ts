@@ -18,10 +18,6 @@ const cors = require('cors');
 // });
 //app.use(logger);
 
-
-mongoose.connect("mongodb://0.0.0.0:27017/my_database")
-    .catch((err) => console.log(err));
-
 //require("dotenv").config();
 const PORT = process.env.PORT || 8081;
 
@@ -30,7 +26,11 @@ app.use(bodyParser.json());
 app.use(cors('https://boolpan-frontend.s3.ap-northeast-2.amazonaws.com:443'));
 app.use(cors('http://3.37.61.56:3000'));
 app.use(cors('http://3.37.61.56:27017'));
-app.use(cors('http://0.0.0.0:27017'));
+app.use(cors('mongodb://mongo:27017'));
+
+mongoose.connect("mongodb://mongo:27017/my_database")
+    .then(() => console.log("database link success"))
+    .catch((err) => console.log(err));
 
 app.set("port", PORT);
 
