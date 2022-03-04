@@ -35,6 +35,7 @@ userRouter.post('/login', asyncWrapper(
 )
 
 const signup = async (userinfo: any) => {
+    console.log('signup');
     await User.init();
     const new_user = await new User(userinfo)
     if (await User.exists({email: new_user.email})) {
@@ -47,6 +48,7 @@ const signup = async (userinfo: any) => {
 }
 
 userRouter.post('/signup', asyncWrapper(
+
     async (req: any, res: any) => {
         //TODO: check type of request body
         console.log(req.body);
@@ -54,7 +56,6 @@ userRouter.post('/signup', asyncWrapper(
             res.send(null);
             return;
         }
-
 
         console.log('/v0/user/signup');
 

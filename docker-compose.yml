@@ -1,15 +1,12 @@
 version: '3'
 services:
   server:
-    container_name: app
-    restart: always
     build: .
     ports:
       - '8081:8081'
     links:
-      - mongo
+      - mongo:my_database
   mongo:
-    container_name: my_database
     image: mongo
     ports:
       - '27017:27017'
