@@ -6,31 +6,39 @@ import mongoose from "mongoose";
 
 const userRouter = express.Router();
 
-const login = async (userinfo: any) => {
-    if (await User.exists(userinfo)) {
-        console.log('pass')
-        return true;
-    } else {
-        return false;
-    }
-}
 
 userRouter.post('/login', asyncWrapper(
     async (req: any, res: any) => {
-        if (!await login(req.body.userinfo)) {
+        const info = req.body.userinfo;
+        const user = await User.findOne({email: info.email}).exec()
+        console.log(user.password)
+        if (!user || user.password !== info.password) {
             res.send(null);
             return;
         }
-        //TODO: check type of request body
-        console.log(req.body)
-
         console.log('/v0/user/login');
 
-        const user_info = {
-            name: "test",
+        const res_obj = {
+            name: user.name,
+            id: user._id
         }
+        res.send(res_obj);
 
-        res.send(user_info);
+
+        // let msg = {
+        //     message: ''
+        // }
+        //
+        // let err = req.session.error;
+        // let suc = req.session.success;
+        // delete req.session.error;
+        // delete req.session.success;
+        // if (err) msg.message = err;
+        // if (msg) msg.message = suc;
+
+        //TODO: check type of request body
+
+
     })
 )
 
@@ -38,6 +46,7 @@ const signup = async (userinfo: any) => {
     console.log('signup');
     await User.init();
     const new_user = await new User(userinfo)
+    new_user._id = new mongoose.Types.ObjectId();
     if (await User.exists({email: new_user.email})) {
         console.log(await User.exists({email: new_user.email}));
         console.log("exists")
@@ -48,7 +57,6 @@ const signup = async (userinfo: any) => {
 }
 
 userRouter.post('/signup', asyncWrapper(
-
     async (req: any, res: any) => {
         //TODO: check type of request body
         console.log(req.body);
