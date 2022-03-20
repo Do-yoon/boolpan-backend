@@ -1,9 +1,14 @@
+// dependencies
 import express from "express";
 import winston from "winston";
 import bodyParser from "body-parser";
 import controller from "./api";
 import mongoose from "mongoose";
 import * as process from "process";
+//let hash = require('pbkdf2-password')()
+let path = require('path');
+//let session = require('express-session');
+
 
 const app = express();
 const cors = require('cors');
@@ -21,6 +26,16 @@ const cors = require('cors');
 //require("dotenv").config();
 const PORT = process.env.PORT || 8081;
 
+// middleware
+// app.use(express.urlencoded({ extended: false }))
+// app.use(session({
+//     resave: false, // don't save session if unmodified
+//     saveUninitialized: false, // don't create session until something stored
+//     secret: 'shhhh, very secret'
+// }));
+
+// Session-persisted message middleware
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 app.use(cors('https://boolpan-frontend.s3.ap-northeast-2.amazonaws.com:443'));
@@ -28,7 +43,11 @@ app.use(cors('http://3.37.61.56:3000'));
 app.use(cors('http://3.37.61.56:27017'));
 app.use(cors('mongodb://mongo:27017'));
 
-mongoose.connect("mongodb://mongo:27017/my_database")
+const MONGO_URL = process.env.NODE_ENV === 'production'
+    ? 'mongodb://mongo:27017'
+    : 'mongodb://localhost:27017'
+
+mongoose.connect(MONGO_URL + "/my_database")
     .then(() => console.log("database link success"))
     .catch((err) => console.log(err));
 
