@@ -50,9 +50,6 @@ const MONGO_URL = process.env.NODE_ENV === 'production'
 mongoose.connect("mongodb://mongo:27017/my_database")
     .then(() => console.log("database link success"))
     .catch((err) => console.log(err));
-mongoose.connect(MONGO_URL + "/my_database")
-    .then(() => console.log("database link success"))
-    .catch((err) => console.log(err));
 
 app.set("port", PORT);
 
