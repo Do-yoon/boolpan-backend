@@ -11,7 +11,7 @@ userRouter.post('/login', asyncWrapper(
     async (req: any, res: any) => {
         const info = req.body.userinfo;
         const user = await User.findOne({email: info.email}).exec()
-        console.log(user.password)
+        // console.log(user.password)
         if (!user || user.password !== info.password) {
             res.send(null);
             return;
