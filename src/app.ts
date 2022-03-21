@@ -38,10 +38,12 @@ const PORT = process.env.PORT || 8081;
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
-app.use(cors('http://boolpan-frontend.s3-website.ap-northeast-2.amazonaws.com:80/'));
+app.use(cors('http://boolpan-frontend.s3-website.ap-northeast-2.amazonaws.com/'));
 app.use(cors('https://boolpan-frontend.s3.ap-northeast-2.amazonaws.com/'));
 
 app.use(cors('http://52.219.58.132:80'));
+app.use(cors('http://52.219.58.15:443'));
+
 app.use(cors('http://3.37.61.56:3000'));
 app.use(cors('http://3.37.61.56:27017'));
 app.use(cors('mongodb://mongo:27017'));
