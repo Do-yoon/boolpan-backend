@@ -27,7 +27,6 @@ chatRouter.get('/:id', asyncWrapper(
             res.send(null);
             return;
         } else {
-
             res.send(room);
         }
 
@@ -60,6 +59,9 @@ chatRouter.post('/createRoom', asyncWrapper(
     }));
 
 chatRouter.post('/sendMessage/:id', (req: any, res: any) => {
+    const room = req.params.room;
+    const user = req.query.user;
+
     const msg = req.body;
     console.log(msg);
 
