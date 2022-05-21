@@ -90,9 +90,9 @@ io.on('connection', function (socket: any) {
         console.log('user disconnected');
     });
 
-    socket.on('chatMessage', function (msg: any) {
-        console.log('message: ' + msg);
-        socket.broadcast.emit('message', msg);
+    socket.on('chatMessage', function (data: any) {
+        console.log('message: ' + data);
+        socket.broadcast.to(`${data.room}`).emit('message', data.msg);
     });
 });
 
