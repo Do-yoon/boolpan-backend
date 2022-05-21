@@ -72,18 +72,13 @@ app.use('/v0', controller);
 
 
 // app.use('io', io);
-const io = require('socket.io')(server, {
+const {Server} = require("socket.io")
+const io = new Server(server, {
     cors: {
         origin: ["http://localhost:3000/", "http://boolpan-frontend.s3-website.ap-northeast-2.amazonaws.com/:3000"],
         credentials: true
     }
 });
-
-io.listen(PORT, () => {
-    console.log("http://localhost:" + PORT);
-});
-
-
 
 
 console.log("chat server");
@@ -101,5 +96,8 @@ io.on('connection', function (socket: any) {
     });
 });
 
+server.listen(PORT, () => {
+    console.log("http://localhost:" + PORT);
+});
 
-export default server;
+export default app;
