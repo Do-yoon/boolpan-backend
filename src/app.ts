@@ -10,10 +10,9 @@ import AdminServer from "./AdminServer";
 //let session = require('express-session');
 let path = require('path');
 
-
 const app = express();
 const cors = require('cors');
-const server = require('http').createServer(app);
+
 // const logger = winston.createLogger({
 //     level: 'info',
 //     format: winston.format.json(),
@@ -28,8 +27,6 @@ const server = require('http').createServer(app);
 //require("dotenv").config();
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
-
-
 
 // middleware
 // app.use(express.urlencoded({ extended: false }))
@@ -73,31 +70,33 @@ app.use('/v0', controller);
 
 // app.use('io', io);
 const {Server} = require("socket.io")
-const io = new Server(server, {
-    cors: {
-        origin: ["http://localhost:3000/", "http://boolpan-frontend.s3-website.ap-northeast-2.amazonaws.com/:3000"],
-        credentials: true
-    }
-});
-
-
-console.log("chat server");
-io.on('connection', function (socket: any) {
-
-    console.log("a user connected");
-
-    socket.on('disconnect', function () {
-        console.log('user disconnected');
-    });
-
-    socket.on('chatMessage', function (data: any) {
-        console.log('message: ' + data);
-        socket.broadcast.to(`${data.room}`).emit('message', data.msg);
-    });
-});
+const server = require('http').createServer(app);
 
 server.listen(PORT, () => {
+    const io = new Server(server, {
+        cors: {
+            origin: ["http://localhost:3000/", "http://boolpan-frontend.s3-website.ap-northeast-2.amazonaws.com/:3000"],
+            credentials: true
+        }
+    });
+
     console.log("http://localhost:" + PORT);
+
+    console.log("chat server");
+    io.on('connection', function (socket: any) {
+
+        console.log("a user connected");
+
+        socket.on('disconnect', function () {
+            console.log('user disconnected');
+        });
+
+        socket.on('chatMessage', function (data: any) {
+            console.log('message: ' + data);
+            socket.broadcast.to(`${data.room}`).emit('message', data.msg);
+        });
+    });
+
 });
 
 export default app;
