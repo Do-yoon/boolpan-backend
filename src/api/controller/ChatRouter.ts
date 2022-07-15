@@ -58,6 +58,18 @@ chatRouter.post('/createRoom', asyncWrapper(
         console.log(res_body)
     }));
 
+// 채팅방 입장 시 데이터베이스에 유저 정보 저장
+chatRouter.post('/enterRoom/:id', asyncWrapper(
+    async (req: any, res: any) => {
+        const data = req.body;
+        // 채팅방 id 받아 검색
+        // 해당 방 데이터베이스에 입장한 유저 id 등록
+        // 반환값: Success/Not Success
+        data.room_id
+        data.room_date
+    }
+));
+
 chatRouter.post('/sendMessage/:id', (req: any, res: any) => {
     const room = req.params.room;
     const user = req.query.user;
