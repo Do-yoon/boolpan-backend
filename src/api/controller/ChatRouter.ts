@@ -1,10 +1,11 @@
 import express from "express";
-import {User} from "../model/UserSchema";
+import {User} from "../model/user/UserSchema";
 import asyncWrapper from "./Wrapper";
-import {Room} from "../model/RoomSchema";
-import {Message} from "../model/MessageSchema";
+import {Room} from "../model/chat/room/RoomSchema";
+import {Message} from "../model/chat/MessageSchema";
 import mongoose, {Schema} from "mongoose";
 import {ErrorType, RoomType} from "./type";
+import {RoomEnter} from "../model/chat/RoomEnterSchema";
 
 const chatRouter = express.Router();
 
@@ -42,13 +43,14 @@ chatRouter.post('/createRoom', (req: any, res: any) => {
             ...req.body.roominfo,
             current: 1
         }
+
         Room.init()
             .then(() => new Room(room) )
             .then(new_room => {
                 new_room._id = new mongoose.Types.ObjectId();
                 return {new_room: new_room, flag: Room.exists({name: room.name})}
             })
-            .then(({new_room, flag}) => {
+            .then(({new_room, flag}: {new_room: any, flag: any}) => {
                 if(flag) {
                     throw new Error(ErrorType.ALREADY_EXIST)
                 }
@@ -56,10 +58,9 @@ chatRouter.post('/createRoom', (req: any, res: any) => {
             })
             .then(
                 (new_room) => {
-                    new_room.save()
-                    return new_room
+                    return new_room.save()
                 },
-                (reject) => throw new Error(ErrorType.INTERNAL_ERROR)
+                (reject) => {throw new Error(ErrorType.INTERNAL_ERROR)}
             )
             .then((new_room) => {
                     const res_body = {
@@ -83,15 +84,33 @@ chatRouter.post('/enterRoom/:id', asyncWrapper(
     async (req: any, res: any) => {
         const data = req.body;
 
-        // 채팅방 id 받아 검색
-        const room = await Room.findOne({_id: data.room_id}).exec()
+        Room.findOne({_id: data.room_id}).exec()
+            .then(
+                // 해당 방 데이터베이스에 입장한 유저 id 등록
+                room => {
+                    const success = !room
+                    return new RoomEnter({
+                        ...data,
+                        success: success
+                    })
+                },
+                reject => {throw new Error("no room")}
+            )
+            .then(
+                roomEnter => {
+                    roomEnter._id = new mongoose.Types.ObjectId();
+                    return roomEnter.save();
+                }
+            )
+            .catch(
+                e => {
+                    console.log(e)
+                    res.send(e)
+                }
+            )
 
-        // 해당 방 데이터베이스에 입장한 유저 id 등록
-        await
-
-        // 반환값: Success/Not Success
-
-        data.room_date
+            // 반환값: Success/Not Success
+            data.room_date
     }
 ));
 
@@ -119,6 +138,5 @@ chatRouter.post('/sendMessage/:room', asyncWrapper(async (req: any, res: any) =>
 
     })
 )
-
 
 export default chatRouter;
