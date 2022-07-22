@@ -1,5 +1,5 @@
 import express from "express";
-import {User} from "../model/UserSchema";
+import {User} from "../model/user/UserSchema";
 import asyncWrapper from "./Wrapper";
 import mongoose from "mongoose";
 
