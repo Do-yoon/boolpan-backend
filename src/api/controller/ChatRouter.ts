@@ -86,7 +86,7 @@ chatRouter.post('/enterRoom/:id', asyncWrapper(
 
         Room.findOne({_id: data.room_id}).exec()
             .then(
-                // 해당 방 데이터베이스에 입장한 유저 id 등록
+                // 채팅방 id, 해당 방에 입장한 유저 id를 도큐먼트로 등록
                 room => {
                     const success = !room
                     return new RoomEnter({
