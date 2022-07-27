@@ -13,7 +13,7 @@ interface Configuration extends WebpackConfiguration {
 const config: Configuration = {
     entry: {
         index: {
-            import: './src/app.ts',
+            import: './src/app.test.ts',
         },
     },
     target: 'node',
