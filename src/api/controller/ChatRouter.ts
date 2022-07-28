@@ -9,6 +9,7 @@ import {RoomEnter} from "../model/chat/RoomEnterSchema";
 
 const chatRouter = express.Router();
 
+
 chatRouter.get('/', asyncWrapper(
     async (req: any, res: any) => {
         const room_list = await Room.find().exec()
@@ -36,7 +37,22 @@ chatRouter.get('/:id', asyncWrapper(
 
 }));
 
+/**
+ * request body
+ {
+     user_id: string,
+     room_name: string,
+     category: string,
+     pw: string,
+     live_time: Date
+ }
 
+ * response body
+ {
+     success: boolean,
+     error?: number
+ }
+ */
 chatRouter.post('/createRoom', (req: any, res: any) => {
         console.log('/createRoom')
         const room = {
@@ -80,6 +96,21 @@ chatRouter.post('/createRoom', (req: any, res: any) => {
     }
 );
 
+/**
+ * request body
+ {
+     sender: string,
+     message: string,
+     timestamp: Date
+ }
+
+ * response body
+ {
+    success: boolean,
+    end_time?: Date,
+    error?: string
+ }
+ */
 chatRouter.post('/enterRoom/:id', asyncWrapper(
     async (req: any, res: any) => {
         const data = req.body;
@@ -114,6 +145,22 @@ chatRouter.post('/enterRoom/:id', asyncWrapper(
     }
 ));
 
+/**
+ * request body
+ {
+     user_id: string,
+     room_id: string,
+ }
+
+ * response body
+ {
+    success: boolean,
+    current?: number,
+    end_time?: Date,
+    error?: string
+ }
+
+ */
 chatRouter.post('/sendMessage/:id', (req: any, res: any) => {
     const room = req.params.room;
     const user = req.query.user;
@@ -125,6 +172,20 @@ chatRouter.post('/sendMessage/:id', (req: any, res: any) => {
     res.send({status: 0});
 });
 
+/**
+ * request body
+ {
+     user_id: string,
+     room_id: string,
+ }
+
+ * response body
+ {
+    user_id:
+    room_id:
+    message:
+ }
+ */
 chatRouter.post('/sendMessage/:room', asyncWrapper(async (req: any, res: any) => {
         const data = {
             user: req.query.user,

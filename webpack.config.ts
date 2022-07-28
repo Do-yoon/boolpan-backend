@@ -1,9 +1,9 @@
 import { Configuration as WebpackConfiguration } from "webpack";
 import { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
+import * as path from "path"
 
-const path = require('path');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import * as HtmlWebpackPlugin from 'html-webpack-plugin';
 const isProduction = process.env.NODE_ENV === 'production';
 
 interface Configuration extends WebpackConfiguration {

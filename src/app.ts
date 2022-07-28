@@ -1,10 +1,11 @@
 // dependencies
-const express = require("express");
+import express from "express";
 import winston from "winston";
 import bodyParser from "body-parser";
 import controller from "./api";
 import mongoose from "mongoose";
 import * as process from "process";
+import http from "http";
 import AdminServer from "./AdminServer";
 //let hash = require('pbkdf2-password')()
 //let session = require('express-session');
@@ -23,7 +24,6 @@ const cors = require('cors');
 //     ]
 // });
 //app.use(logger);
-
 //require("dotenv").config();
 
 
@@ -63,12 +63,8 @@ app.get('/', (req: any, res: any) => {
     res.send("Hello world");
 });
 
-//const api = require('api');
 app.use('/v0', controller);
-
-
-// app.use('io', io);
-export const server = require('http').createServer(app);
+export const server = http.createServer(app);
 
 
 export default app;

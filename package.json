@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "main": "server.ts",
   "private": true,
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/do-yoon/boolpan-backend.git"
@@ -48,7 +49,7 @@
     "build": "tsc -p .",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
     "serve": "webpack serve",
-    "test": "jest --setupFiles dotenv/config",
+    "test": "node --setupFiles dotenv/config",
     "dev": "ts-node-dev --respawn ./src/server.ts",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
