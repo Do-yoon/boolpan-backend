@@ -94,5 +94,6 @@
   "exclude": [
     "*.test.ts",
     "node_modules/**/*"
-  ]
+  ],
+  "esModuleInterop": true
 }

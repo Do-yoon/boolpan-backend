@@ -1,6 +1,5 @@
-const app = require("../src/app")
-const chat = require('../src/api/controller/ChatRouter');
-const request = require("supertest");
+import app from "../src/app";
+import * as request from "supertest";
 const version = 'v0'
 
 describe("/chat", () => {

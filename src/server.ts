@@ -18,6 +18,8 @@ io.on('connection', (socket: any) => {
         console.log('message: ' + data);
         socket.broadcast.to(`${data.room}`).emit('message', data.msg);
     });
+
+    //socket.join()
 });
 
 server.listen(PORT, () => {
