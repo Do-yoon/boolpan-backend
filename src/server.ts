@@ -5,44 +5,99 @@ import io from "./io";
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
 
+type RoomInfoType = {
+    // 익명 유저 소켓 아이디와 방 이름을 매핑
+    anonymous_user_number: Map<string, number>
+    limit: number
+    password: string
+    delete_time: Date
+    category: string
+}
 
+// TODO: 에러 종류 세분화
+// TODO: 방장 기능 만들기
 io.on('connection', (socket: any) => {
 
     console.log("a user connected");
 
-    // 익명 유저 번호와 유저 아이디 매핑
-    // Map<Room, Map<SocketId, anonymous_number>>
-    const anonymous_user_map = new Map<string, Map<string, number>>();
+    // 방의 정보와 이름을 매핑
+    const room_info_map = new Map<string, RoomInfoType>();
+    const rooms = io.of("/").adapter.rooms;
+    const sids = io.of("/").adapter.sids;
 
     socket.on('disconnect', function () {
         console.log('user disconnected');
     });
 
-    socket.on('chatMessage', function (data: any) {
-        console.log('message: ' + data);
-        socket.broadcast.to(`${data.room}`).emit('message', data.msg);
+    socket.on('sendMessage', function (room_id: string, msg: string) {
+        const room_info = room_info_map.get(room_id)
+        if (room_info && rooms.get(room_id)) {
+            socket.to(`${room_id}`).emit('getMessage', {
+                sender: room_info.anonymous_user_number.get(socket.id),
+                msg: msg
+            });
+        } else {
+            socket.to(socket.id).emit('error', {msg: "메시지를 보내지 못했습니다."})
+        }
     });
 
     // 방 생성
     // client -> `${user} 님이 입장했습니다.`
-    socket.adapter.on("create-room", (room_id: string) => {
-        socket.in(room_id).emit('new_user', {user: `익명1`})
+    socket.adapter.on("create-room", (room_id: string, category: string, password: string, limit: number, delete_time: Date) => {
+        room_info_map.set(room_id, {
+            anonymous_user_number: new Map<string, number>(),
+            limit: limit,
+            password: password,
+            delete_time: delete_time,
+            category: category
+        })
+        const user_map = room_info_map.get(room_id)
+        if (user_map) {
+            user_map.anonymous_user_number.set(socket.id, 1)
+            socket.to(socket.id).emit("room_info", {
+                error: null,
+            })
+            socket.in(room_id).emit('new_user', {user: 1})
+        } else {
+            socket.to(socket.id).emit('room_info', {msg: "방을 만들지 못했습니다."})
+        }
+
+        setTimeout(() => {
+            io.to(room_id).emit("delete-room", {msg: "펑! 방 유지시간이 끝났어요."})
+            io.socketsLeave(room_id);
+            room_info_map.delete(room_id)
+            // Rooms are left automatically upon disconnection.
+        }, Date.now() - (+delete_time))
     });
 
     // 입장
-    socket.on('join_room', (room_id: string) => {
+    // client -> `${user} 님이 입장했습니다.`
+    socket.adapter.on('join-room', (room_id: string) => {
         socket.join(room_id)
-        anonymous_user_map.set(room_id, new Map<string, number>())
-        const user_map = anonymous_user_map.get(socket.id)
+        const user_map = room_info_map.get(room_id)
+
         if (user_map) {
-            user_map.set(socket.id, anonymous_user_map.get(room_id).get(socket.id)+1);
-            socket.in(room_id).emit('new_user', {user: `익명${}`});
-        }
-        else {
-            socket.to(socket.id).emit()
-            return
+            const current = user_map.anonymous_user_number.size
+            // 정원 초과 검사
+            if (user_map.limit >= current) {
+                user_map.anonymous_user_number.set(socket.id, current + 1);
+                socket.in(room_id).emit('new_user', {user: user_map.anonymous_user_number.get(socket.id)});
+            } else {
+                socket.to(socket.id).emit('error', {msg: "정원 초과로 입장하지 못했습니다."})
+            }
+        } else {
+            socket.to(socket.id).emit('error', {msg: "입장하지 못했습니다."})
         }
     });
+
+    socket.adapter.on('leave-room', (room_id: string) => {
+        socket.leave(room_id)
+        const room_info = room_info_map.get(room_id)
+        if (room_info) {
+            room_info.anonymous_user_number.delete(socket.id)
+        }
+    });
+
 });
 
 server.listen(PORT, () => {
