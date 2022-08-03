@@ -1,9 +1,10 @@
 export type RoomType = {
-    id: number
-    name: string
-    title: string
-    limit: number
     current: number
+    limit: number
+    password: string
+    delete_time: Date
+    category: string
+    name: string
 }
 
 export interface ChatList {

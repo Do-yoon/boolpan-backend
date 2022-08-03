@@ -1,6 +1,7 @@
 import {server} from "./app";
 import process from "process";
 import io from "./io";
+import {createRoom} from "./database/transaction";
 
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
@@ -8,6 +9,7 @@ console.log(`port: ${PORT}`)
 type RoomInfoType = {
     // 익명 유저 소켓 아이디와 방 이름을 매핑
     anonymous_user_number: Map<string, number>
+    current: number
     limit: number
     password: string
     delete_time: Date
@@ -43,23 +45,48 @@ io.on('connection', (socket: any) => {
 
     // 방 생성
     // client -> `${user} 님이 입장했습니다.`
-    socket.adapter.on("create-room", (room_id: string, category: string, password: string, limit: number, delete_time: Date) => {
+    socket.on("create-room", (
+        room_id: string,
+        category: string,
+        password: string,
+        limit: number,
+        delete_time: Date,
+        callback: Function
+    ) => {
+        socket.join(room_id)
+        console.log(room_id)
         room_info_map.set(room_id, {
             anonymous_user_number: new Map<string, number>(),
+            current: 1,
             limit: limit,
             password: password,
             delete_time: delete_time,
             category: category
         })
+        let error = ''
         const user_map = room_info_map.get(room_id)
         if (user_map) {
             user_map.anonymous_user_number.set(socket.id, 1)
-            socket.to(socket.id).emit("room_info", {
-                error: null,
+            createRoom({
+                name: room_id,
+                current: 1,
+                limit: limit,
+                password: password,
+                delete_time: delete_time,
+                category: category
+            }, (room: any) => {
+                console.log(room)
             })
             socket.in(room_id).emit('new_user', {user: 1})
         } else {
-            socket.to(socket.id).emit('room_info', {msg: "방을 만들지 못했습니다."})
+            error = "방을 만들지 못했습니다."
+        }
+        if (typeof callback === "function") {
+            callback({
+                error: error
+            })
+        } else {
+            console.log('callback is not a function')
         }
 
         setTimeout(() => {
@@ -70,10 +97,12 @@ io.on('connection', (socket: any) => {
         }, Date.now() - (+delete_time))
     });
 
+
     // 입장
     // client -> `${user} 님이 입장했습니다.`
-    socket.adapter.on('join-room', (room_id: string) => {
+    socket.on('join-room', (room_id: string) => {
         socket.join(room_id)
+        console.log(room_id)
         const user_map = room_info_map.get(room_id)
 
         if (user_map) {
