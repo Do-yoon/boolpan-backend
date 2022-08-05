@@ -1,18 +1,19 @@
 import express from "express";
-import {User} from "../model/user/UserSchema";
+import {User} from "../../database/model/user/UserSchema";
 import asyncWrapper from "./Wrapper";
-import {Room} from "../model/chat/room/RoomSchema";
-import {Message} from "../model/chat/MessageSchema";
+import {Room} from "../../database/model/chat/room/RoomSchema";
+import {Message} from "../../database/model/chat/MessageSchema";
 import mongoose, {Schema} from "mongoose";
 import {ErrorType, RoomType} from "./type";
-import {RoomEnter} from "../model/chat/RoomEnterSchema";
+import {RoomEnter} from "../../database/model/chat/RoomEnterSchema";
 
 const chatRouter = express.Router();
 
 
 chatRouter.get('/', asyncWrapper(
     async (req: any, res: any) => {
-        const room_list = await Room.find().exec()
+        const room_list = await Room.find({}).select('_id name limit keeping_time')
+        console.log(room_list[0])
         if (room_list.length === 0) {
             res.send(null);
             return;
@@ -82,7 +83,7 @@ chatRouter.post('/createRoom', (req: any, res: any) => {
             )
             .then((new_room) => {
                     const res_body = {
-                        current: new_room._id,
+                        current: new_room.name,
                         end_time: new_room.date
                     }
                     res.send(res_body)

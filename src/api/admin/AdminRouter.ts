@@ -1,6 +1,6 @@
 import express from "express";
 import asyncWrapper from "../controller/Wrapper";
-import {Admin} from "../model/AdminSchema";
+import {Admin} from "../../database/model/AdminSchema";
 import mongoose from "mongoose";
 import userRouter from "../controller/UserRouter";
 
