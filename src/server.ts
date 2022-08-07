@@ -2,6 +2,7 @@ import {server} from "./app";
 import process from "process";
 import io from "./io";
 import {createRoom, joinRoom} from "./database/transaction";
+import {type} from "os";
 
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
@@ -9,7 +10,7 @@ console.log(`port: ${PORT}`)
 type RoomInfoType = {
     // 익명 유저 소켓 아이디와 방 이름을 매핑
     anonymous_user_number: Map<string, number>
-    explode_time: Date
+    explode_time: Number
 }
 
 type CreateRoomProps = {
@@ -17,7 +18,7 @@ type CreateRoomProps = {
     category: string,
     password: string,
     limit: number,
-    explode_time: Date
+    keeping_time: number
 }
 
 // TODO: 에러 종류 세분화
@@ -50,14 +51,16 @@ io.on('connection', (socket: any) => {
     // 방 생성
     // client -> `${user} 님이 입장했습니다.`
     socket.on("create-room", (data: CreateRoomProps, callback: (response: any) => void) => {
-        console.log(data.name)
+        console.log(`create-room: ${data.name}`);
+        const explode_time = Date.now() + data.keeping_time;
         const new_room_info: RoomInfoType = {
-            ...data,
+            explode_time: explode_time,
             anonymous_user_number: new Map<string, number>(),
         }
 
         createRoom({
             ...data,
+            explode_time: explode_time,
             current: 1
         }).then((room: any) =>
             new Promise((resolve, reject) => {
@@ -80,13 +83,13 @@ io.on('connection', (socket: any) => {
                 callback(res)
 
                 socket.join(room._id)
-                console.log(data.explode_time)
+                console.log(`explode_time: ${explode_time}`)
                 setTimeout(() => {
                     io.to(room._id).emit("delete-room", {msg: "펑! 방 유지시간이 끝났어요."})
                     io.socketsLeave(room._id);
                     room_info_map.delete(room._id)
                     resolve(room._id)
-                }, data.explode_time.getMilliseconds() - Date.now());
+                }, data.keeping_time);
             })
         ).then((id: any) => {
             console.log(`room deleted: ${id}`)
@@ -101,7 +104,7 @@ io.on('connection', (socket: any) => {
             name: string,
             current: number,
             limit: number,
-            explode_time: Date
+            explode_time: number
         },
         error: string
     }) => void) => {
@@ -113,7 +116,7 @@ io.on('connection', (socket: any) => {
                 name: '',
                 current: 0,
                 limit: 0,
-                explode_time: new Date
+                explode_time: 0
             },
             error: ''
         }
@@ -131,7 +134,14 @@ io.on('connection', (socket: any) => {
                     res.error = "정원 초과로 입장하지 못했습니다."
                 }
             })
-        callback(res)
+
+        if (typeof callback === "function")
+            callback(res)
+        else {
+            console.log(`callback is not a function: ${callback}`)
+            res.error = `callback is not a function: ${callback}`
+        }
+
     })
 
 

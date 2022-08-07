@@ -1,10 +1,10 @@
 export type RoomType = {
-    current: number
-    limit: number
-    password: string
-    explode_time: Date
-    category: string
     name: string
+    category: string
+    current: number
+    password: string
+    limit: number
+    explode_time: number
 }
 
 export interface ChatList {
