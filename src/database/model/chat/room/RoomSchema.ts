@@ -9,7 +9,7 @@ const roomSchema = new Schema({
     current: Number,
     password: {type: String, default : null},
     limit: Number,
-    explode_time: Date,
+    explode_time: Number,
     // location: String,
 });
 
