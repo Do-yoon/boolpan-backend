@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import {RoomEnter} from "./model/chat/RoomEnterSchema";
 import * as Mongoose from "mongoose";
 import {reject} from "lodash";
+import {JoinRoom} from "./model/chat/room/JoinRoom";
 
 export function createRoom(room: RoomType) {
 
@@ -44,14 +45,12 @@ export function joinRoom(room_id: string, user_id: string, password?: string) {
                 // 방이 존재 && (비밀번호 없으면 true, 비밀번호 있으면 문자열 비교 결과에 따라 달라짐)
                 let success = !!room && (!room.password || (room.password === password));
                 return new Promise((resolve, reject) => {
-                    const room_enter = new RoomEnter({
+                    const join_room = new JoinRoom({
                         room_id: room_id,
-                        user_id: user_id,
-                        success: success
+                        user_id: user_id
                     })
                     resolve({
-                        room_enter: room_enter,
-                        room: room
+                        join_room: join_room
                     })
                 })
             },
@@ -60,14 +59,13 @@ export function joinRoom(room_id: string, user_id: string, password?: string) {
             }
         )
         .then(
-            ({room_enter, room}: any) => {
-                room_enter.save();
-                return new Promise((resolve, reject) => {
-                    room_enter._id = new mongoose.Types.ObjectId();
-                    resolve(room);
+            ({join_room}: any) => {
+                join_room.save();
+                JoinRoom.count({room_id: room_id}, (err, count) => {
+
                 })
-            }
-        )
+                return
+            })
         .catch(
             e => {
                 console.log(e)
