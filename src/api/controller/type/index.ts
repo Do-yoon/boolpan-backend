@@ -7,13 +7,7 @@ export type RoomType = {
     explode_time: number
 }
 
-export type RoomInfoType = {
-    // 익명 유저 소켓 아이디와 방 이름을 매핑
-    anonymous_user_number: Map<string, number>
-    explode_time: Number
-}
-
-export interface UserInfo {
+export type UserType = {
     user_id: string
 }
 
