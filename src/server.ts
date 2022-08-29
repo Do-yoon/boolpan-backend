@@ -2,17 +2,15 @@ import {server} from "./app";
 import process from "process";
 import io from "./io";
 import {createRoom, joinRoom} from "./database/transaction";
-import {type} from "os";
 import {
     CreateRoomParams,
     JoinRoomParams, LeaveRoomParams,
     SendMessageParams
 } from "./api/controller/type/RequestDataTypes";
-import {RoomType, UserType} from "./api/controller/type";
 import {JoinRoomResponseData} from "./api/controller/type/ResponseDataTypes";
 import user from "./api";
 import {Room, User} from "./database/model";
-import {JoinRoom} from "./database/model/chat/room/JoinRoom";
+import {getTimestampString} from "./util/getTimestampString";
 
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
@@ -46,7 +44,7 @@ io.on('connection', (socket: any) => {
     const rooms = io.of("/").adapter.rooms;
     const sids = io.of("/").adapter.sids;
 
-
+    // 소켓 정보와 유저의 DB 식별자를 매핑
     socket.on("init", (email: string) => {
         User.findOne({email: email})
             .then(doc => {
@@ -60,21 +58,21 @@ io.on('connection', (socket: any) => {
     });
 
     socket.on('sendMessage', (params: SendMessageParams) => {
-        const room = roominfo.get(params.room_id)
-        const user = userinfo.get(socket.id)
+        const user = userinfo.get(socket.id);
 
-        if (!!roominfo && !!user && !!user.user_id) {
-            User.findOne({_id: user.user_id})
-                .then(doc => {
-                    socket.to(params.room_id).emit('getMessage', {
-                        sender: doc.user.name,
-                        msg: params.msg,
-                        timestamp: Date.now()
-                    });
-                })
-        } else {
-            socket.to(socket.id).emit('error', {msg: "메시지를 보내지 못했습니다."})
-        }
+        (!!roominfo && !!user && !!user.user_id
+                ? User.findOne({_id: user.user_id})
+                    .then(doc => {
+                        socket.to(params.room_id).emit('getMessage', {
+                            message: {
+                                sender: doc.user.name,
+                                msg: params.msg,
+                                timestamp: getTimestampString()
+                            }
+                        })
+                    })
+                : socket.to(socket.id).emit('error', {msg: "메시지를 보내지 못했습니다."})
+        )
     });
 
     // 방 생성
@@ -93,16 +91,17 @@ io.on('connection', (socket: any) => {
                 const res = {
                     error: ''
                 }
-                const user_id = user.get(socket.id)
-                if (user_id) {
-                    User.findOne({_id: user_id})
-                        .then(doc => {
-                            //로그
-                            socket.in(room._id).emit('new_user', {user: doc.name})
-                        })
-                } else {
-                    res.error = "방을 만들지 못했습니다."
-                }
+                const user_id = user.get(socket.id);
+
+                (user_id ?
+                        User.findOne({_id: user_id})
+                            .then(doc => {
+                                //로그
+                                socket.in(room._id).emit('new_user', {user: doc.name})
+                            })
+                        :
+                        res.error = "방을 만들지 못했습니다."
+                )
                 if (typeof params.callback !== "function") {
                     console.log(`callback is not a function: ${params.callback}`)
                     res.error = `callback is not a function: ${params.callback}`
@@ -122,7 +121,6 @@ io.on('connection', (socket: any) => {
             console.log(`room deleted: ${id}`)
         })
     });
-
 
     // 입장
     // client -> `${user} 님이 입장했습니다.`
