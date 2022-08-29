@@ -1,16 +1,20 @@
 import {JoinRoomResponseData} from "./ResponseDataTypes";
 
 export type CreateRoomParams = {
-    name: string,
-    category: string,
-    password: string,
-    limit: number,
-    keeping_time: number
+    data: {
+        name: string
+        category: string
+        password: string
+        limit: number
+        keeping_time: number
+    }
     callback: (response: any) => void
 }
 export type JoinRoomParams = {
-    room_id: string,
-    password: string,
+    data: {
+        room_id: string
+        password: string
+    }
     callback: (data: JoinRoomResponseData) => void
 }
 
