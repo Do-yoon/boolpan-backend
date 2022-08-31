@@ -3,7 +3,7 @@ import { Configuration as WebpackDevServerConfiguration } from "webpack-dev-serv
 import * as path from "path"
 
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import * as HtmlWebpackPlugin from 'html-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 const isProduction = process.env.NODE_ENV === 'production';
 
 interface Configuration extends WebpackConfiguration {
@@ -13,7 +13,7 @@ interface Configuration extends WebpackConfiguration {
 const config: Configuration = {
     entry: {
         index: {
-            import: './src/server.ts',
+            import: './src/io.ts',
         },
     },
     target: 'node',
@@ -72,7 +72,7 @@ const config: Configuration = {
     },
     resolve: {
         extensions: [".ts", ".js", ".json"],
-        plugins: [new TsconfigPathsPlugin({ configFile: 'src/tsconfig.json' })]
+        plugins: [new TsconfigPathsPlugin({configFile: "tsconfig.json"}) as any]
     },
     plugins: [
         new HtmlWebpackPlugin({
@@ -81,7 +81,7 @@ const config: Configuration = {
     ]
 };
 
-module.exports = (isProduction
+export default (isProduction
     ? {
         ...config,
         mode: 'production'

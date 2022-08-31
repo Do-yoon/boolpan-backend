@@ -1,21 +1,17 @@
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const Client = require("socket.io-client");
+import Client from "socket.io-client";
+import express from "express";
+import http from "http";
+import {ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData} from "../src/types/ioType";
+import {Server} from "socket.io";
 
 describe("my awesome project", () => {
-    let io, serverSocket, clientSocket;
+    let serverSocket, clientSocket;
 
     beforeAll((done) => {
-        const httpServer = createServer();
-        io = new Server(httpServer);
-        httpServer.listen(() => {
-            const port = httpServer.address().port;
-            clientSocket = new Client(`http://localhost:${port}`);
-            io.on("connection", (socket) => {
-                serverSocket = socket;
-            });
-            clientSocket.on("connect", done);
-        });
+        const app = express();
+        const server = http.createServer(app);
+        const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {});
+
     });
 
     afterAll(() => {
@@ -23,7 +19,7 @@ describe("my awesome project", () => {
         clientSocket.close();
     });
 
-    test("should work", (done) => {
+    test("/user/signin 테스트", (done) => {
         clientSocket.on("hello", (arg) => {
             expect(arg).toBe("world");
             done();
