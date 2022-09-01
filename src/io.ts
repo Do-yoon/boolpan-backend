@@ -1,17 +1,12 @@
 import {server} from "./app";
 import {Server} from "socket.io";
 import process from "process";
-import {createRoom, joinRoom} from "./database/transaction";
-import {
-    CreateRoomParams,
-    JoinRoomParams, LeaveRoomParams,
-    SendMessageParams
-} from "./api/controller/type/RequestDataTypes";
-import {JoinRoomResponseData} from "./api/controller/type/ResponseDataTypes";
 import user from "./api";
 import {Room, User} from "./database/model";
 import {getTimestampString} from "./util/getTimestampString";
 import {ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData} from "./types/ioType";
+import mongoose from "mongoose";
+import {JoinRoom} from "./database/model/chat/room/JoinRoom";
 
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
@@ -31,20 +26,17 @@ io.on('connection', (socket) => {
 
     // DB 조회 횟수를 줄이기 위해 런타임에서 채팅방, 유저 정보를 가지고 있음
     // 채팅방은 socket.io 상의 채팅방 이름과 room_id가 같음
-    /*
-    key: room_id
-     */
+    /* key: room_id */
     const roominfo = new Map<string, {
         name: string
         category: string
-        current: number
+        // objectId
+        current: string[]
         password: string
         limit: number
         explode_time: number
     }>()
-    /*
-    key: socket.id
-     */
+    /* key: socket.id */
     const userinfo = new Map<string, {
         user_id: string,
         name: string
@@ -54,10 +46,10 @@ io.on('connection', (socket) => {
     const sids = io.of("/").adapter.sids;
 
     // 소켓 정보와 유저의 DB 식별자를 매핑
-    socket.on("init", (email: string) => {
+    socket.on("init", (email) => {
         User.findOne({email: email})
             .then(doc => {
-                userinfo.set(socket.id, {...doc})
+                (doc ? userinfo.set(socket.id, {user_id: doc._id.toString(), name: doc.name}) : null)
             })
     })
 
@@ -66,111 +58,129 @@ io.on('connection', (socket) => {
         user.delete(socket.id);
     });
 
-    socket.on('sendMessage', (params: SendMessageParams) => {
+    socket.on('sendMessage', (room_id, text) => {
         const user = userinfo.get(socket.id);
 
-        (!!roominfo && !!user && !!user.user_id
-                ? User.findOne({_id: user.user_id})
-                    .then(doc => {
-                        socket.to(params.room_id).emit('getMessage', {
+        if (!!roominfo && !!user && !!user.user_id) {
+            User.findOne({_id: user.user_id})
+                .then(doc => {
+                    if (doc) {
+                        socket.to(room_id).emit('getMessage', {
                             message: {
-                                sender: doc?.user?.name,
-                                text: params.msg,
+                                sender: doc.name,
+                                text: text,
                                 timestamp: getTimestampString()
                             }
                         })
-                    })
-                : socket.to(socket.id).emit('error', "메시지를 보내지 못했습니다.")
-        )
+                    }
+                })
+        } else socket.to(socket.id).emit('error', "메시지를 보내지 못했습니다.")
     });
 
     // 방 생성
     // client -> `${user} 님이 입장했습니다.`
-    socket.on("createRoom", (params: CreateRoomParams) => {
-        console.log(`createRoom: ${params.data.name}`);
-        const explode_time = Date.now() + params.data.keeping_time;
+    socket.on("createRoom", (data, callback) => {
+        console.log(`createRoom: ${data.name}`);
+        const explode_time = Date.now() + data.keeping_time;
 
-        createRoom({
-            ...params.data,
-            explode_time: explode_time,
-            current: 1
-        }).then((room: any) =>
-            new Promise((resolve, reject) => {
-                console.log(room)
+        Room.init()
+            .then(() => new Room(data))
+            .then(new_room => {
+                new_room._id = new mongoose.Types.ObjectId();
+                return new_room
+            })
+            .then(new_room => new_room.save())
+            .then(room => {
                 const res = {
                     error: ''
                 }
-                const user_id = user.get(socket.id);
+                const owner = userinfo.get(socket.id);
+                const room_id = room._id.toString()
 
-                (user_id ?
-                        User.findOne({_id: user_id})
-                            .then(doc => {
-                                //로그
-                                socket.in(room._id).emit('newUser', doc?.name)
-                            })
-                        :
-                        res.error = "방을 만들지 못했습니다."
-                )
-                if (typeof params.callback !== "function") {
-                    console.log(`callback is not a function: ${params.callback}`)
-                    res.error = `callback is not a function: ${params.callback}`
-                }
-                params.callback(res)
+                if (owner) {
+                    socket.in(room_id).emit('newUser', owner.name)
+                    roominfo.set(room_id, {
+                        ...data,
+                        explode_time: Date.now() / 1000 + data.keeping_time,
+                        current: [owner.user_id]
+                    })
+                } else res.error = "방을 만들지 못했습니다."
 
-                socket.join(room._id)
+                callback(res, {room_id: room._id.toString()})
+
+                socket.join(room_id)
                 console.log(`explode_time: ${explode_time}`)
                 setTimeout(() => {
-                    io.to(room._id).emit("deleteRoom", "펑! 방 유지시간이 끝났어요.")
-                    io.socketsLeave(room._id);
-                    //로그
-                    resolve(room._id)
-                }, params.data.keeping_time);
+                    io.to(room_id).emit("deleteRoom", "펑! 방 유지시간이 끝났어요.")
+                    io.socketsLeave(room_id);
+                }, data.keeping_time)
             })
-        ).then((id: any) => {
-            console.log(`room deleted: ${id}`)
-        })
-    });
+            .then((id: any) => console.log(`room deleted: ${id}`))
+            .catch(error => {
+                console.log(error)
+                return error
+            })
+    })
 
-    // 입장
-    // client -> `${user} 님이 입장했습니다.`
-    socket.on('joinRoom', ({callback, data}: JoinRoomParams) => {
+// 입장
+// client -> `${user} 님이 입장했습니다.`
+    socket.on('joinRoom', (data, callback) => {
         const {room_id, password} = data
-
+        const user = userinfo.get(socket.id)
         socket.join(room_id)
-        console.log(`join:${room_id}`)
-
-        let res: JoinRoomResponseData = {
+        let res = {
             roominfo: {
                 name: '',
                 current: 0,
                 limit: 0,
                 explode_time: 0
             },
-            error: ''
+            error: '',
+            success: false
         }
-
         const len = rooms.get(room_id)
-        joinRoom(room_id, socket.id, password)
-            .then((room: any) => {
-                if (len && room.limit >= len) {
-                    socket.join(room_id)
-                } else if (!len) {
-                    res.error = "입장하지 못했습니다.";
-                } else {
-                    res.error = "정원 초과로 입장하지 못했습니다."
-                }
-            })
+        if (user) {
+            const user_id = user.user_id;
+            Room.findOne({_id: room_id}).exec()
+                .then(
+                    room => {
+                        // 방이 존재 && (비밀번호 없으면 true, 비밀번호 있으면 문자열 비교 결과에 따라 달라짐)
+                        res.success = !!room && (!room.password || (room.password === password));
+                        const joinRoom = new JoinRoom({
+                            room_id: room_id,
+                            user_id: user_id
+                        })
+                        return {joinRoom: joinRoom.save(), room: room}
+                    },
+                )
+                .then(({joinRoom, room}) => {
+                    return JoinRoom.count({room_id: room_id}, (err, count) => {
 
-        if (typeof callback === "function")
-            callback(res)
-        else {
-            console.log(`callback is not a function: ${callback}`)
-            res.error = `callback is not a function: ${callback}`
-        }
+                    })
+                    return
+                })
+                .catch(
+                    e => {
+                        console.log(e)
+                    }
+                )
+                .then((room: any) => {
+                    if (len && room.limit >= len) {
+                        socket.join(room_id)
+                    } else if (!len) {
+                        res.error = "입장하지 못했습니다.";
+                    } else {
+                        res.error = "정원 초과로 입장하지 못했습니다."
+                    }
+                })
+
+            callback(res);
+
+        } else res.error = "로그인 해 주세요."
 
     })
 
-    socket.on('leaveRoom', (params: LeaveRoomParams) => {
+    socket.on('leaveRoom', (params) => {
         socket.leave(params.room_id);
         const user = userinfo.get(socket.id);
         (user ? socket.in(params.room_id).emit('leaveUser', user.name) : null);
@@ -183,3 +193,5 @@ server.listen(PORT, () => {
     console.log("http://localhost:" + PORT);
     console.log("chat server");
 });
+
+export default io;

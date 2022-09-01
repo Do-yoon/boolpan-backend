@@ -1,17 +1,19 @@
-import Client from "socket.io-client";
+import {Socket as ClientSocket, io as ClientIO} from "socket.io-client";
 import express from "express";
 import http from "http";
-import {ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData} from "../src/types/ioType";
-import {Server} from "socket.io";
+import {ClientToServerEvents, ServerToClientEvents} from "../src/types/ioType";
+import io from "io";
+import {Socket} from "socket.io";
 
 describe("my awesome project", () => {
-    let serverSocket, clientSocket;
+    let clientSocket: ClientSocket<ServerToClientEvents, ClientToServerEvents>, serverSocket: Socket;
 
     beforeAll((done) => {
-        const app = express();
-        const server = http.createServer(app);
-        const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {});
-
+        clientSocket = ClientIO("http://localhost:8081", {
+            // withCredentials: true,
+            transports: ['websocket']
+        });
+        clientSocket.on("connect", done);
     });
 
     afterAll(() => {
@@ -20,11 +22,14 @@ describe("my awesome project", () => {
     });
 
     test("/user/signin 테스트", (done) => {
-        clientSocket.on("hello", (arg) => {
-            expect(arg).toBe("world");
-            done();
-        });
-        serverSocket.emit("hello", "world");
+        const data = {
+            name: "test",
+            category: "아이돌",
+            limit: 100,
+            password: "1234",
+            keeping_time: 10000
+        }
+
     });
 
     test("should work (with ack)", (done) => {

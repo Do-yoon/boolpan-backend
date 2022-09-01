@@ -1,10 +1,3 @@
-import {
-    CreateRoomParams,
-    JoinRoomParams,
-    LeaveRoomParams,
-    SendMessageParams
-} from "../api/controller/type/RequestDataTypes";
-
 export interface ServerToClientEvents {
     init: () => void;
     deleteRoom: (msg: string) => void;
@@ -22,10 +15,35 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     init: (email: string) => void;
-    sendMessage: (args: SendMessageParams) => void;
-    createRoom: (args: CreateRoomParams) => void;
-    joinRoom: ({callback, data}: JoinRoomParams) => void;
-    leaveRoom: (params: LeaveRoomParams) => void;
+    sendMessage: (room_id: string, text: string) => void;
+    createRoom: (roomData: {
+                     name: string
+                     category: string
+                     password: string
+                     limit: number
+                     keeping_time: number
+                 },
+                 callback: (e: {error: string}, data: {
+                     room_id: string
+                 }) => void) => void;
+    joinRoom: (data: {
+                   room_id: string,
+                   password: string
+               },
+               callback: (data: {
+                   roominfo: {
+                       name: string,
+                       current: number,
+                       limit: number,
+                       explode_time: number
+                       password?: string
+                   },
+                   error: string
+               }) => void
+    ) => void;
+    leaveRoom: (args: {
+        room_id: string
+    }) => void;
 }
 
 export interface InterServerEvents {

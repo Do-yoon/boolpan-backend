@@ -1,17 +1,15 @@
 import express from "express";
-import {User} from "../../database/model/user/UserSchema";
 import asyncWrapper from "./Wrapper";
 import {Room} from "../../database/model/chat/room/RoomSchema";
 import {Message} from "../../database/model/chat/MessageSchema";
 import mongoose, {Schema} from "mongoose";
 import {ErrorType, RoomType} from "./type";
-import {RoomEnter} from "../../database/model/chat/RoomEnterSchema";
+import { Request, Response } from "express";
 
 const chatRouter = express.Router();
 
-
 chatRouter.get('/', asyncWrapper(
-    async (req: any, res: any) => {
+    async (req: Request, res: Response) => {
         const room_list = await Room.find({}).select('_id name limit keeping_time')
         console.log(room_list[0])
         if (room_list.length === 0) {
@@ -98,55 +96,6 @@ chatRouter.post('/createRoom', (req: any, res: any) => {
 
     }
 );
-
-/**
- * request body
- {
-     sender: string,
-     message: string,
-     timestamp: Date
- }
-
- * response body
- {
-    success: boolean,
-    end_time?: Date,
-    error?: string
- }
- */
-chatRouter.post('/enterRoom/:id', asyncWrapper(
-    async (req: any, res: any) => {
-        const data = req.body;
-
-        Room.findOne({_id: data.room_id}).exec()
-            .then(
-                // 채팅방 id, 해당 방에 입장한 유저 id를 도큐먼트로 등록
-                room => {
-                    const success = !room
-                    return new RoomEnter({
-                        ...data,
-                        success: success
-                    })
-                },
-                reject => {throw new Error("no room")}
-            )
-            .then(
-                roomEnter => {
-                    roomEnter._id = new mongoose.Types.ObjectId();
-                    return roomEnter.save();
-                }
-            )
-            .catch(
-                e => {
-                    console.log(e)
-                    res.send(e)
-                }
-            )
-
-            // 반환값: Success/Not Success
-            data.room_date
-    }
-));
 
 /**
  * request body
