@@ -6,11 +6,10 @@ import {Room, User} from "./database/model";
 import {getTimestampString} from "./util/getTimestampString";
 import {ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData} from "./types/ioType";
 import mongoose from "mongoose";
-import {JoinRoom} from "./database/model/chat/room/JoinRoom";
+import EventEmitter from "events";
 
 const PORT = process.env.PORT || 8081;
 console.log(`port: ${PORT}`)
-
 
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
     cors: {
@@ -22,28 +21,35 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 // TODO: 에러 종류 세분화
 // TODO: 방장 기능 만들기
 // TODO: 메시지 유형 분류하기
+
+/* key: room_id */
+const roominfo = new Map<string, {
+    name: string
+    category: string
+    // objectId
+    current: string[]
+    password: string
+    limit: number
+    explode_time: number
+}>()
+/* key: socket.id */
+const userinfo = new Map<string, {
+    user_id: string,
+    name: string
+}>()
+
+const eventEmitter = new EventEmitter();
+
 io.on('connection', (socket) => {
 
     // DB 조회 횟수를 줄이기 위해 런타임에서 채팅방, 유저 정보를 가지고 있음
     // 채팅방은 socket.io 상의 채팅방 이름과 room_id가 같음
-    /* key: room_id */
-    const roominfo = new Map<string, {
-        name: string
-        category: string
-        // objectId
-        current: string[]
-        password: string
-        limit: number
-        explode_time: number
-    }>()
-    /* key: socket.id */
-    const userinfo = new Map<string, {
-        user_id: string,
-        name: string
-    }>()
 
     const rooms = io.of("/").adapter.rooms;
     const sids = io.of("/").adapter.sids;
+    eventEmitter.on("getCurrentHeadCounts", (callback: (rooms: Map<string, Set<string>>) => void) => {
+        callback(rooms)
+    })
 
     // 소켓 정보와 유저의 DB 식별자를 매핑
     socket.on("init", (email) => {
@@ -54,13 +60,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
-        console.log('user disconnected');
         user.delete(socket.id);
     });
 
     socket.on('sendMessage', (room_id, text) => {
         const user = userinfo.get(socket.id);
-
         if (!!roominfo && !!user && !!user.user_id) {
             User.findOne({_id: user.user_id})
                 .then(doc => {
@@ -87,9 +91,8 @@ io.on('connection', (socket) => {
             .then(() => new Room(data))
             .then(new_room => {
                 new_room._id = new mongoose.Types.ObjectId();
-                return new_room
+                return new_room.save()
             })
-            .then(new_room => new_room.save())
             .then(room => {
                 const res = {
                     error: ''
@@ -127,58 +130,52 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (data, callback) => {
         const {room_id, password} = data
         const user = userinfo.get(socket.id)
-        socket.join(room_id)
-        let res = {
-            roominfo: {
-                name: '',
-                current: 0,
-                limit: 0,
-                explode_time: 0
-            },
-            error: '',
-            success: false
-        }
-        const len = rooms.get(room_id)
+        let res = {}
+
         if (user) {
             const user_id = user.user_id;
+            const room = rooms.get(room_id)
+            const count = (room ? room.size : undefined)
+            let limit: number;
+            res = Object.assign(res, {
+                roominfo: {
+                    name: '',
+                    current: 0,
+                    limit: 0,
+                    explode_time: 0
+                }
+            })
+            socket.join(room_id)
+
             Room.findOne({_id: room_id}).exec()
                 .then(
                     room => {
-                        // 방이 존재 && (비밀번호 없으면 true, 비밀번호 있으면 문자열 비교 결과에 따라 달라짐)
-                        res.success = !!room && (!room.password || (room.password === password));
-                        const joinRoom = new JoinRoom({
-                            room_id: room_id,
-                            user_id: user_id
-                        })
-                        return {joinRoom: joinRoom.save(), room: room}
-                    },
-                )
-                .then(({joinRoom, room}) => {
-                    return JoinRoom.count({room_id: room_id}, (err, count) => {
+                        if (room) {
+                            if (!room.password || (room.password === password)) {
+                                limit = room.limit;
+                            } else {
+                                res = Object.assign(res, {error: "비밀번호가 일치하지 않습니다."})
+                            }
+                        } else {
+                            res = Object.assign(res, {error: "존재하지 않는 방입니다."})
+                        }
 
+                        if (count && limit >= count) {
+                            socket.join(room_id)
+                        } else if (!count) {
+                            res = Object.assign(res, {error: "입장하지 못했습니다."})
+                        } else {
+                            res = Object.assign(res, {error: "정원 초과로 입장하지 못했습니다."})
+                        }
                     })
-                    return
+                .catch((e) => {
+                    console.log(e)
                 })
-                .catch(
-                    e => {
-                        console.log(e)
-                    }
-                )
-                .then((room: any) => {
-                    if (len && room.limit >= len) {
-                        socket.join(room_id)
-                    } else if (!len) {
-                        res.error = "입장하지 못했습니다.";
-                    } else {
-                        res.error = "정원 초과로 입장하지 못했습니다."
-                    }
-                })
-
-            callback(res);
-
-        } else res.error = "로그인 해 주세요."
-
+        } else
+            res = Object.assign(res, {error: "로그인 해 주세요."})
+        callback(res);
     })
+
 
     socket.on('leaveRoom', (params) => {
         socket.leave(params.room_id);

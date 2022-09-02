@@ -28,17 +28,17 @@ export interface ClientToServerEvents {
                  }) => void) => void;
     joinRoom: (data: {
                    room_id: string,
-                   password: string
+                   password?: string
                },
                callback: (data: {
-                   roominfo: {
+                   roominfo?: {
                        name: string,
                        current: number,
                        limit: number,
                        explode_time: number
                        password?: string
                    },
-                   error: string
+                   error?: string
                }) => void
     ) => void;
     leaveRoom: (args: {
