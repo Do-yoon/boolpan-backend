@@ -1,21 +1,19 @@
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const Client = require("socket.io-client");
+import {Socket as ClientSocket, io as ClientIO} from "socket.io-client";
+import express from "express";
+import http from "http";
+import {ClientToServerEvents, ServerToClientEvents} from "../src/types/ioType";
+import io from "io";
+import {Socket} from "socket.io";
 
 describe("my awesome project", () => {
-    let io, serverSocket, clientSocket;
+    let clientSocket: ClientSocket<ServerToClientEvents, ClientToServerEvents>, serverSocket: Socket;
 
     beforeAll((done) => {
-        const httpServer = createServer();
-        io = new Server(httpServer);
-        httpServer.listen(() => {
-            const port = httpServer.address().port;
-            clientSocket = new Client(`http://localhost:${port}`);
-            io.on("connection", (socket) => {
-                serverSocket = socket;
-            });
-            clientSocket.on("connect", done);
+        clientSocket = ClientIO("http://localhost:8081", {
+            // withCredentials: true,
+            transports: ['websocket']
         });
+        clientSocket.on("connect", done);
     });
 
     afterAll(() => {
@@ -23,12 +21,15 @@ describe("my awesome project", () => {
         clientSocket.close();
     });
 
-    test("should work", (done) => {
-        clientSocket.on("hello", (arg) => {
-            expect(arg).toBe("world");
-            done();
-        });
-        serverSocket.emit("hello", "world");
+    test("/user/signin 테스트", (done) => {
+        const data = {
+            name: "test",
+            category: "아이돌",
+            limit: 100,
+            password: "1234",
+            keeping_time: 10000
+        }
+
     });
 
     test("should work (with ack)", (done) => {
