@@ -1,8 +1,7 @@
 import express from "express";
 import asyncWrapper from "../controller/Wrapper";
-import {Admin} from "../../database/model/AdminSchema";
+import {Admin} from "../model/AdminSchema";
 import mongoose from "mongoose";
-import userRouter from "../controller/UserRouter";
 
 /*
  * /v0/admin/login
