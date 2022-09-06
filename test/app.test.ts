@@ -1,7 +1,7 @@
 import {Socket as ClientSocket, io as ClientIO} from "socket.io-client";
 import express from "express";
 import http from "http";
-import {ClientToServerEvents, ServerToClientEvents} from "../src/types/ioType";
+import {ClientToServerEvents, ServerToClientEvents} from "../src/ioType";
 import io from "io";
 import {Socket} from "socket.io";
 
