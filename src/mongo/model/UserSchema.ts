@@ -7,15 +7,27 @@ export interface IUser {
     email: string,
     name: string,
     password: string,
-    date: number
+    createdAt: number
 }
 
 const userSchema = new Schema<IUser>({
     _id: mongoose.Types.ObjectId,
-    email: {type: String, required: true},
-    name: {type: String, required: true},
-    password: {type: String, required: true},
-    date: {type: Number, default: Date.now()}
+    email: {
+        type: String,
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Number,
+        default: Date.now()
+    }
 });
 
 export const User = mongoose.model('User', userSchema);

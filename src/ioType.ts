@@ -1,4 +1,4 @@
-export interface ServerToClientEvents {
+export interface Chat_ServerToClientEvents {
     init: () => void;
     deleteRoom: (msg: string) => void;
     getMessage: (args: {

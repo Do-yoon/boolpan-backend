@@ -1,4 +1,4 @@
-import {User} from "../model/user/UserSchema";
+import {User} from "../mongo/model/UserSchema";
 import mongoose from "mongoose";
 
 /* @type {userinfo: {email: string, password: string}} */

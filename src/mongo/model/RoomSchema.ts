@@ -8,17 +8,28 @@ interface IRoom {
     category: string,
     password?: string,
     limit: number,
-    explode_time: number,
+    createdAt: number,
 }
 
 const roomSchema = new Schema<IRoom>({
     _id: mongoose.Types.ObjectId,
-    name: String,
-    category: String,
-    password: {type: String, default : null},
-    limit: Number,
-    explode_time: Number,
-    // location: String,
+    name: {
+        type: String,
+        required: true
+    },
+    category: {
+        type: String,
+        required: true
+    },
+    password: String,
+    limit: {
+        type: Number,
+        required: true
+    },
+    createdAt: {
+        type: Number,
+        default: Date.now()
+    }
 });
 
 export const Room = mongoose.model('Room', roomSchema);
